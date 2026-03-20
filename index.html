@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1e1e2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TaskMate">
+<title>TaskMate — Lasni & Hishan</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #1e1e2a;
+    --surface:   #27273a;
+    --surface2:  #31314a;
+    --border:    #3d3d58;
+    --ink:       #eeedf8;
+    --muted:     #9090b0;
+    --subtle:    #55557a;
+    --lasni:       #ff7b7b;
+    --lasni-dim:   rgba(255,123,123,0.15);
+    --hishan:      #5dd6ce;
+    --hishan-dim:  rgba(93,214,206,0.15);
+    --done:    #34d399;
+    --overdue: #fb923c;
+    --danger:  #f87171;
+    --radius:  12px;
+    --radius-lg: 18px;
+    --grad-lasni: rgba(255,123,123,0.08);
+    --grad-hishan: rgba(93,214,206,0.08);
+  }
+  body.light {
+    --bg:        #f4f3f8;
+    --surface:   #ffffff;
+    --surface2:  #edecf5;
+    --border:    #dddbe8;
+    --ink:       #1a1a2e;
+    --muted:     #7777aa;
+    --subtle:    #b0aed0;
+    --lasni:       #e85555;
+    --lasni-dim:   rgba(232,85,85,0.10);
+    --hishan:      #1ab5ad;
+    --hishan-dim:  rgba(26,181,173,0.10);
+    --done:    #16a34a;
+    --overdue: #ea6c0a;
+    --danger:  #dc2626;
+    --grad-lasni: rgba(232,85,85,0.06);
+    --grad-hishan: rgba(26,181,173,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: 100px;
+    background-image:
+      radial-gradient(ellipse at 15% 0%, var(--grad-lasni) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 0%, var(--grad-hishan) 0%, transparent 50%);
+  }
+
+  /* HEADER */
+  header {
+    padding: 20px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lasni), var(--hishan));
+    box-shadow: 0 0 10px rgba(255,107,107,0.4);
+  }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .date-badge {
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+  }
+  .sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--done);
+    box-shadow: 0 0 6px var(--done);
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .sync-dot.syncing { background: var(--overdue); box-shadow: 0 0 6px var(--overdue); animation: blink 0.8s infinite; }
+  .sync-dot.error   { background: var(--danger);  box-shadow: 0 0 6px var(--danger); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* THEME TOGGLE */
+  .theme-toggle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    line-height: 1;
+    padding: 0;
+  }
+  .theme-toggle:hover { background: var(--surface2); transform: rotate(20deg); }
+
+  /* TABS */
+  .tabs-wrap { padding: 16px 24px 0; max-width: 680px; margin: 0 auto; }
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .tab {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--muted);
+  }
+  .tab .badge { font-size: 0.68rem; padding: 1px 6px; border-radius: 10px; background: var(--surface2); }
+  .tab.active-all    { background: var(--surface2); color: var(--ink); }
+  .tab.active-lasni  { background: var(--lasni-dim); color: var(--lasni); }
+  .tab.active-hishan { background: var(--hishan-dim); color: var(--hishan); }
+
+  /* MAIN */
+  main { padding: 20px 24px 0; max-width: 680px; margin: 0 auto; }
+
+  /* OVERDUE BANNER */
+  .overdue-banner {
+    background: rgba(249,115,22,0.08);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: var(--radius);
+    padding: 11px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--overdue);
+    font-weight: 500;
+  }
+
+  /* SECTION */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    margin-top: 6px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .pill {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    text-transform: none;
+    font-weight: 400;
+  }
+
+  /* TASK CARD */
+  .task-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 14px 14px 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .task-card:hover { border-color: var(--subtle); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .task-card.lasni  { border-left: 3px solid var(--lasni); }
+  .task-card.hishan { border-left: 3px solid var(--hishan); }
+  .task-card.done   { opacity: 0.4; }
+  .task-card.overdue { border-left-color: var(--overdue); }
+
+  .check-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--subtle);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+    font-size: 0.65rem;
+    color: white;
+  }
+  .task-card.lasni  .check-btn:hover { border-color: var(--lasni);  background: var(--lasni-dim); }
+  .task-card.hishan .check-btn:hover { border-color: var(--hishan); background: var(--hishan-dim); }
+  .task-card.done   .check-btn { background: var(--done); border-color: var(--done); }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .task-card.done .task-title { text-decoration: line-through; color: var(--muted); }
+
+  .task-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 20px;
+  }
+  .chip.lasni  { background: var(--lasni-dim);  color: var(--lasni); }
+  .chip.hishan { background: var(--hishan-dim); color: var(--hishan); }
+  .chip.date   { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .chip.overdue-chip { background: rgba(249,115,22,0.12); color: var(--overdue); }
+
+  .task-actions {
+    display: flex; gap: 4px; flex-shrink: 0;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .task-card:hover .task-actions { opacity: 1; }
+
+  .icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { color: var(--ink); border-color: var(--subtle); }
+  .icon-btn.del:hover { color: var(--danger); border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
+
+  .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); }
+  .empty-state .emoji { font-size: 2rem; margin-bottom: 10px; }
+  .empty-state p { font-size: 0.82rem; line-height: 1.6; }
+
+  .done-toggle {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 0.78rem;
+    cursor: pointer; background: none; border: none;
+    padding: 6px 0; margin-bottom: 4px;
+    font-family: 'Outfit', sans-serif;
+    transition: color 0.15s;
+  }
+  .done-toggle:hover { color: var(--ink); }
+  .section-divider { height: 20px; }
+
+  /* LOADING */
+  .loading-wrap {
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px 20px; flex-direction: column; gap: 14px;
+    color: var(--muted); font-size: 0.85rem;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--hishan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY CARD */
+  .empty-card {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 20px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    text-align: center;
+  }
+  .empty-card:hover {
+    border-color: var(--subtle);
+    background: var(--surface);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .empty-icon {
+    position: relative;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .empty-pulse {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--subtle);
+    animation: pulse-ring 2s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.85); opacity: 0.6; }
+    70%  { transform: scale(1.25); opacity: 0; }
+    100% { transform: scale(1.25); opacity: 0; }
+  }
+  .empty-icon span {
+    font-size: 1.4rem;
+    color: var(--subtle);
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+  }
+  .empty-card:hover .empty-icon span { color: var(--ink); }
+  .empty-msg  { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--ink); }
+  .empty-hint { font-size: 0.78rem; color: var(--muted); line-height: 1.5; max-width: 240px; }
+  .empty-cta  { font-size: 0.75rem; color: var(--subtle); font-weight: 500; margin-top: 2px; transition: color 0.15s; }
+  .empty-card:hover .empty-cta { color: var(--hishan); }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 24px; right: 24px; left: 24px;
+    max-width: 632px; margin: 0 auto;
+    background: linear-gradient(135deg, var(--lasni) 0%, #ff8e53 100%);
+    color: white; border: none;
+    border-radius: var(--radius-lg);
+    padding: 15px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 24px rgba(255,107,107,0.3);
+    transition: all 0.2s; z-index: 99;
+    letter-spacing: 0.03em;
+  }
+  .fab:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,107,107,0.4); }
+  .fab:active { transform: translateY(0); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(8px);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 680px;
+    padding: 10px 24px 44px;
+    transform: translateY(40px);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border); border-radius: 2px;
+    margin: 14px auto 22px;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block; font-size: 0.7rem; font-weight: 500;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.07em; margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%; padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem; color: var(--ink);
+    background: var(--surface2);
+    transition: border-color 0.15s; outline: none;
+    color-scheme: dark;
+  }
+  .form-input:focus { border-color: var(--subtle); }
+  .assignee-toggle { display: flex; gap: 8px; }
+  .assignee-btn {
+    flex: 1; padding: 11px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem; font-weight: 500;
+    transition: all 0.15s; color: var(--muted);
+  }
+  .assignee-btn.selected-lasni  { border-color: var(--lasni);  background: var(--lasni-dim);  color: var(--lasni); }
+  .assignee-btn.selected-hishan { border-color: var(--hishan); background: var(--hishan-dim); color: var(--hishan); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .submit-btn {
+    flex: 1; padding: 13px;
+    border-radius: var(--radius); border: none;
+    background: linear-gradient(135deg, var(--lasni), #ff8e53);
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .submit-btn:hover { opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .cancel-btn {
+    padding: 13px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem; cursor: pointer;
+    transition: color 0.15s;
+  }
+  .cancel-btn:hover { color: var(--ink); }
+
+  /* CONFIRM */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 300;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s;
+    backdrop-filter: blur(6px);
+    padding: 24px;
+  }
+  .confirm-overlay.open { opacity: 1; pointer-events: all; }
+  .confirm-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px; max-width: 320px; width: 100%;
+    transform: scale(0.94);
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .confirm-overlay.open .confirm-box { transform: scale(1); }
+  .confirm-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+  .confirm-text  { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 8px; }
+  .confirm-del {
+    flex: 1; padding: 11px; border-radius: var(--radius); border: none;
+    background: var(--danger); color: white;
+    font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  }
+  .confirm-cancel {
+    flex: 1; padding: 11px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 0.85rem; cursor: pointer;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 90px;
+    left: 50%; transform: translateX(-50%) translateY(10px);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--ink); padding: 10px 18px; border-radius: 30px;
+    font-size: 0.82rem; opacity: 0; pointer-events: none;
+    transition: all 0.3s; white-space: nowrap; z-index: 400;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    header, .tabs-wrap, main { padding-left: 16px; padding-right: 16px; }
+    .fab { left: 16px; right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-dot"></div>TaskMate</div>
+  <div class="header-right">
+    <div class="date-badge" id="today-date"></div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+    <div class="sync-dot" id="sync-dot" title="Sync status"></div>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active-all" onclick="switchTab('all')" id="tab-all">All <span class="badge" id="badge-all">0</span></button>
+    <button class="tab" onclick="switchTab('lasni')"  id="tab-lasni">Lasni  <span class="badge" id="badge-lasni">0</span></button>
+    <button class="tab" onclick="switchTab('hishan')" id="tab-hishan">Hishan <span class="badge" id="badge-hishan">0</span></button>
+  </div>
+</div>
+
+<main>
+  <div id="overdue-banner" class="overdue-banner" style="display:none">
+    ⚠️ <span id="overdue-text"></span>
+  </div>
+  <div id="task-list">
+    <div class="loading-wrap"><div class="spinner"></div>Loading tasks…</div>
+  </div>
+</main>
+
+<button class="fab" onclick="openModal()">＋ Add Task</button>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">New Task</div>
+    <div class="form-group">
+      <label class="form-label">Task</label>
+      <input class="form-input" id="input-title" type="text" placeholder="What needs to be done?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Due Date</label>
+      <input class="form-input" id="input-date" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assign To</label>
+      <div class="assignee-toggle">
+        <button class="assignee-btn" id="btn-lasni"  onclick="selectAssignee('lasni')">Lasni</button>
+        <button class="assignee-btn" id="btn-hishan" onclick="selectAssignee('hishan')">Hishan</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+      <button class="submit-btn" id="submit-btn" onclick="submitTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Delete this task?</div>
+    <div class="confirm-text">This can't be undone. The task will be permanently removed.</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-del"    onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://kzvbuctjnjnhlmeykxuk.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_s2xbRTbRceNei_-WpNslxg_KvHorjN0';
+  const API = `${SUPABASE_URL}/rest/v1/tasks`;
+  const HEADERS = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Prefer': 'return=representation'
+  };
+  const RETENTION_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
+
+  let tasks = [];
+  let currentTab = 'all';
+  let selectedAssignee = null;
+  let editingId = null;
+  let deletingId = null;
+  const openDoneSections = {};
+
+  // INIT
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short'
+  });
+  document.getElementById('input-date').valueAsDate = new Date();
+  // THEME
+  (function() {
+    const saved = localStorage.getItem('taskmate_theme') || 'dark';
+    applyTheme(saved);
+  })();
+
+  function applyTheme(theme) {
+    const btn = document.getElementById('theme-toggle');
+    if (theme === 'light') {
+      document.body.classList.add('light');
+      if (btn) btn.textContent = '☀️';
+    } else {
+      document.body.classList.remove('light');
+      if (btn) btn.textContent = '🌙';
+    }
+    localStorage.setItem('taskmate_theme', theme);
+  }
+
+  function toggleTheme() {
+    const isLight = document.body.classList.contains('light');
+    applyTheme(isLight ? 'dark' : 'light');
+  }
+
+  loadTasks();
+  setInterval(loadTasks, 30000); // refresh every 30s
+
+  // SYNC STATUS
+  function setSyncStatus(s) {
+    document.getElementById('sync-dot').className = 'sync-dot' + (s==='syncing' ? ' syncing' : s==='error' ? ' error' : '');
+  }
+
+  // LOAD
+  async function loadTasks() {
+    setSyncStatus('syncing');
+    try {
+      const res = await fetch(`${API}?order=created_at.desc`, { headers: HEADERS });
+      if (!res.ok) throw new Error();
+      tasks = await res.json();
+      await purgeOldCompleted();
+      setSyncStatus('ok');
+      render();
+    } catch {
+      setSyncStatus('error');
+      showToast('⚠️ Could not connect — check internet');
+      document.getElementById('task-list').innerHTML = `<div class="empty-state"><div class="emoji">⚠️</div><p>Could not load tasks.<br>Check your connection and refresh.</p></div>`;
+    }
+  }
+
+  // 2-WEEK RETENTION: auto-delete completed tasks older than 14 days
+  async function purgeOldCompleted() {
+    const cutoff = new Date(Date.now() - RETENTION_MS).toISOString();
+    const stale = tasks.filter(t => t.done && t.created_at && t.created_at < cutoff);
+    for (const t of stale) {
+      try { await fetch(`${API}?id=eq.${t.id}`, { method: 'DELETE', headers: HEADERS }); } catch {}
+    }
+    if (stale.length) tasks = tasks.filter(t => !(t.done && t.created_at && t.created_at < cutoff));
+  }
+
+  // HELPERS
+  function isOverdue(t) {
+    if (!t.date || t.done) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    return new Date(t.date + 'T00:00:00') < today;
+  }
+  function formatDate(d) {
+    if (!d) return '';
+    const date = new Date(d + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tom = new Date(today); tom.setDate(today.getDate()+1);
+    if (date.getTime()===today.getTime()) return 'Today';
+    if (date.getTime()===tom.getTime()) return 'Tomorrow';
+    return date.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  }
+  function countActive(who) { return tasks.filter(t => !t.done && (who==='all'||t.assignee===who)).length; }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function showToast(msg, ms=2500) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), ms);
+  }
+
+  // RENDER
+  function render() {
+    document.getElementById('badge-all').textContent    = countActive('all');
+    document.getElementById('badge-lasni').textContent  = countActive('lasni');
+    document.getElementById('badge-hishan').textContent = countActive('hishan');
+    const od = tasks.filter(isOverdue);
+    const banner = document.getElementById('overdue-banner');
+    if (od.length) {
+      banner.style.display = 'flex';
+      document.getElementById('overdue-text').textContent = `${od.length} overdue task${od.length>1?'s':''} — time to catch up!`;
+    } else { banner.style.display = 'none'; }
+    const c = document.getElementById('task-list');
+    currentTab === 'all' ? renderAll(c) : renderPerson(c, currentTab);
+  }
+
+  function renderAll(c) {
+    c.innerHTML = personSection('lasni') + '<div class="section-divider"></div>' + personSection('hishan');
+  }
+  function renderPerson(c, who) { c.innerHTML = personSection(who); }
+
+  const emptyMessages = {
+    lasni:  ["Lasni, you're all caught up! 🌸", "Nothing on your plate, Lasni!", "Lasni's list is sparkling clean ✨"],
+    hishan: ["Hishan, you're free as a bird! 🪁", "Nothing for you yet, Hishan!", "Hishan's list is wide open 🌊"],
+  };
+  const emptyHints = [
+    "Great businesses are built one task at a time.",
+    "Add your first task and get the ball rolling!",
+    "A clear list means a clear mind — let's fill it up!",
+  ];
+
+  function personSection(who) {
+    const name = who==='lasni'?'Lasni':'Hishan';
+    const active = tasks.filter(t=>!t.done&&t.assignee===who);
+    const done   = tasks.filter(t=> t.done&&t.assignee===who);
+    let h = `<div class="section-header">
+      <div class="section-title">${name}</div>
+      <span class="pill">${active.length} active</span>
+    </div>`;
+    if (!active.length && !done.length) {
+      const msg  = emptyMessages[who][Math.floor(Math.random()*emptyMessages[who].length)];
+      const hint = emptyHints[Math.floor(Math.random()*emptyHints.length)];
+      h += `<div class="empty-card" onclick="openModalFor('${who}')">
+        <div class="empty-icon">
+          <div class="empty-pulse"></div>
+          <span>＋</span>
+        </div>
+        <div class="empty-msg">${msg}</div>
+        <div class="empty-hint">${hint}</div>
+        <div class="empty-cta">Tap to add a task for ${name} →</div>
+      </div>`;
+    } else {
+      active.forEach(t => h += card(t));
+      if (done.length) {
+        h += `<button class="done-toggle" onclick="toggleDone_('${who}')">
+          <span id="done-arrow-${who}">▶</span> ${done.length} completed
+        </button>`;
+        done.forEach(t => h += card(t, `done-section-${who}`));
+      }
+    }
+    return h;
+  }
+
+  function card(t, group='') {
+    const od = isOverdue(t);
+    const dl = formatDate(t.date);
+    const cls = ['task-card', t.assignee, t.done?'done':'', od?'overdue':''].filter(Boolean).join(' ');
+    return `<div class="${cls}" id="card-${t.id}" ${group?`data-group="${group}" style="display:none"`:''}">
+      <button class="check-btn" onclick="toggleDone('${t.id}')">${t.done?'✓':''}</button>
+      <div class="task-body">
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-meta">
+          <span class="chip ${t.assignee}">${t.assignee==='lasni'?'Lasni':'Hishan'}</span>
+          ${dl?`<span class="chip date ${od?'overdue-chip':''}">${od?'⚠ ':''}${dl}</span>`:''}
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="icon-btn" onclick="openEdit('${t.id}')" title="Edit">✎</button>
+        <button class="icon-btn del" onclick="openConfirm('${t.id}')" title="Delete">✕</button>
+      </div>
+    </div>`;
+  }
+
+  function toggleDone_(who) {
+    openDoneSections[who] = !openDoneSections[who];
+    document.querySelectorAll(`[data-group="done-section-${who}"]`)
+      .forEach(el => el.style.display = openDoneSections[who]?'flex':'none');
+    const a = document.getElementById(`done-arrow-${who}`);
+    if (a) a.textContent = openDoneSections[who]?'▼':'▶';
+  }
+
+  // TOGGLE COMPLETE
+  async function toggleDone(id) {
+    const t = tasks.find(x=>String(x.id)===String(id)); if (!t) return;
+    try {
+      const res = await fetch(`${API}?id=eq.${id}`, { method:'PATCH', headers:HEADERS, body:JSON.stringify({done:!t.done}) });
+      if (!res.ok) throw new Error();
+      const up = await res.json();
+      const idx = tasks.findIndex(x=>x.id===id);
+      if (idx!==-1) tasks[idx] = {...tasks[idx], ...up[0]};
+      render();
+      showToast(t.done ? '↩ Marked active' : '✓ Done!');
+    } catch { showToast('⚠️ Could not update'); }
+  }
+
+  // TABS
+  function switchTab(tab) {
+    currentTab = tab;
+    ['all','lasni','hishan'].forEach(t => {
+      document.getElementById(`tab-${t}`).className = 'tab' + (t===tab?` active-${t}`:'');
+    });
+    render();
+  }
+
+  // MODAL
+  function openModalFor(who) { openModal(); setTimeout(()=>selectAssignee(who), 50); }
+
+  function openModal() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'New Task';
+    document.getElementById('submit-btn').textContent  = 'Add Task';
+    document.getElementById('input-title').value = '';
+    document.getElementById('input-date').valueAsDate = new Date();
+    selectedAssignee = null;
+    document.getElementById('btn-lasni').className  = 'assignee-btn';
+    document.getElementById('btn-hishan').className = 'assignee-btn';
+    document.getElementById('modal-overlay').classList.add('open');
+    setTimeout(()=>document.getElementById('input-title').focus(), 300);
+  }
+
+  function openEdit(id) {
+    const t = tasks.find(x=>String(x.id)===String(id)); if (!t) return;
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Edit Task';
+    document.getElementById('submit-btn').textContent  = 'Save Changes';
+    document.getElementById('input-title').value = t.title;
+    document.getElementById('input-date').value  = t.date||'';
+    selectAssignee(t.assignee);
+    document.getElementById('modal-overlay').classList.add('open');
+    setTimeout(()=>document.getElementById('input-title').focus(), 300);
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    editingId = null; selectedAssignee = null;
+  }
+  function handleOverlayClick(e) { if (e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+  function selectAssignee(who) {
+    selectedAssignee = who;
+    document.getElementById('btn-lasni').className  = 'assignee-btn'+(who==='lasni'?' selected-lasni':'');
+    document.getElementById('btn-hishan').className = 'assignee-btn'+(who==='hishan'?' selected-hishan':'');
+  }
+
+  async function submitTask() {
+    const title = document.getElementById('input-title').value.trim();
+    const date  = document.getElementById('input-date').value;
+    if (!title) { document.getElementById('input-title').focus(); return; }
+    if (!selectedAssignee) { showToast('Please assign to Lasni or Hishan'); return; }
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    try {
+      if (editingId) {
+        const res = await fetch(`${API}?id=eq.${editingId}`, {
+          method:'PATCH', headers:HEADERS, body:JSON.stringify({title,date,assignee:selectedAssignee})
+        });
+        if (!res.ok) throw new Error();
+        const up = await res.json();
+        const idx = tasks.findIndex(x=>String(x.id)===String(editingId));
+        if (idx!==-1) tasks[idx] = {...tasks[idx],...up[0]};
+        showToast('✎ Task updated');
+      } else {
+        const res = await fetch(API, {
+          method:'POST', headers:HEADERS,
+          body:JSON.stringify({title,date,assignee:selectedAssignee,done:false})
+        });
+        if (!res.ok) throw new Error();
+        const created = await res.json();
+        tasks.unshift(created[0]);
+        showToast('✓ Task added');
+      }
+      closeModal(); render();
+    } catch { showToast('⚠️ Could not save task'); }
+    finally { btn.disabled = false; }
+  }
+
+  // DELETE
+  function openConfirm(id)  { deletingId=id; document.getElementById('confirm-overlay').classList.add('open'); }
+  function closeConfirm()   { deletingId=null; document.getElementById('confirm-overlay').classList.remove('open'); }
+
+  async function confirmDelete() {
+    if (!deletingId) return;
+    const id = deletingId; closeConfirm();
+    try {
+      const res = await fetch(`${API}?id=eq.${id}`, { method:'DELETE', headers:HEADERS });
+      if (!res.ok) throw new Error();
+      tasks = tasks.filter(t=>String(t.id)!==String(id));
+      render(); showToast('🗑 Task deleted');
+    } catch { showToast('⚠️ Could not delete task'); }
+  }
+
+  // KEYBOARD
+  document.getElementById('input-title').addEventListener('keydown', e => {
+    if (e.key==='Enter') document.getElementById('input-date').focus();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') { closeModal(); closeConfirm(); }
+  });
+</script>
+</body>
+</html>

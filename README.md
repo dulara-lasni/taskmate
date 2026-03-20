@@ -2,13 +2,11 @@
 
 A lightweight, shared task manager for two — built as a single-page web app and backed by Supabase.
 
-🔗 **Live app:** [taskmate-dekode.netlify.app](https://taskmate-dekode.netlify.app)
-
 ---
 
 ## Features
 
-- **Shared task lists** — tasks are assigned to either Lasni or Hishan, with colour-coded cards for each person
+- **Shared task lists** — tasks are assigned to defined people, with colour-coded cards for each person
 - **Add, edit & delete tasks** — full CRUD via a clean bottom-sheet modal
 - **Due dates** — set deadlines per task; overdue tasks are flagged with a warning banner and badge
 - **Complete tasks** — tap the circle to mark a task done; completed tasks are grouped under a collapsible section
@@ -86,4 +84,4 @@ taskmate/
 
 ## License
 
-This project is for personal use by Lasni & Hishan. Feel free to fork and adapt it for your own use.
+This project is for personal use by the owner. 
